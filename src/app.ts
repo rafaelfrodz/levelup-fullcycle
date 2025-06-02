@@ -1,4 +1,16 @@
 import express from "express";
+import * as mysql from "mysql2/promise";
+import bcryot from "bcrypt";
+
+function createConnection(){
+  return mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "root",
+    database: "tickets",
+    port: 33060
+  });
+}
 
 const app = express();
 
@@ -15,12 +27,61 @@ app.post("/auth/login", (req, res) => {
   res.send()
 });
 
-app.post("/partners", (req, res) => {
+app.post("/partners", async (req, res) => {
   const {name, email, password, company_name} = req.body;
+
+  const connection = await createConnection();
+  try {
+      const createdAt = new Date();
+      const hashedPassword = bcryot.hashSync(password, 10);
+
+      const [userResult] = await connection.execute<mysql.ResultSetHeader>('INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, ?)', [
+        name, 
+        email, 
+        hashedPassword, 
+        createdAt
+      ]);
+
+      const userId = userResult.insertId;
+
+      const [partnerResults] = await connection.execute<mysql.ResultSetHeader>('INSERT INTO partners (user_id, company_name, created_at) VALUES (?, ?, ?)',[
+        userId, 
+        company_name, 
+        createdAt
+      ]);
+      res.status(201).json({ id: partnerResults.insertId, name, user_id: userId, company_name, created_at: createdAt});
+  } finally {
+    await connection.end();
+  }
 });
 
-app.post("/customers", (req, res) => {
-  const {name, email, password, adress, telefone} = req.body;
+app.post("/customers", async (req, res) => {
+  const {name, email, password, phone, address} = req.body;
+
+  const connection = await createConnection();
+  try {
+      const createdAt = new Date();
+      const hashedPassword = bcryot.hashSync(password, 10);
+
+      const [userResult] = await connection.execute<mysql.ResultSetHeader>('INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, ?)', [
+        name, 
+        email, 
+        hashedPassword, 
+        createdAt
+      ]);
+
+      const userId = userResult.insertId;
+
+      const [customersResults] = await connection.execute<mysql.ResultSetHeader>('INSERT INTO customers (user_id, address, phone, created_at) VALUES (?, ?, ?, ?)',[
+        userId, 
+        address,
+        phone, 
+        createdAt
+      ]);
+      res.status(201).json({ id: customersResults.insertId, name, user_id: userId, address, phone, created_at: createdAt});
+  } finally {
+    await connection.end();
+  }
 
 });
 
@@ -49,6 +110,13 @@ app.get("/partners/events/:eventId", (req, res) => {
   res.send()
 });
 
-app.listen(3000, () => {
+app.listen(3000, async () => {
+  const connection = await createConnection();
+  await connection.execute("SET FOREIGN_KEY_CHECKS = 0");
+  await connection.execute("TRUNCATE TABLE users");
+  await connection.execute("TRUNCATE TABLE customers");
+  await connection.execute("TRUNCATE TABLE partners");
+  await connection.execute("TRUNCATE TABLE events");
+  await connection.execute("SET FOREIGN_KEY_CHECKS = 1");
   console.log("Server started on port 3000");
 });

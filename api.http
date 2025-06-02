@@ -12,9 +12,9 @@ POST http://localhost:3000/partners
 Content-Type: application/json
 
 {
-	"name": "Partner 1",
+	"name": "Partner 13",
     "company_name": "Company 1",
-	"email": "patner1@user.com",
+	"email": "patner212@user.com",
 	"password": "123456"
 }
 
@@ -25,11 +25,11 @@ Content-Type: application/json
 
 {
 	"name": "Partner 1",
-	"email": "patner1@user.com",
+	"email": "patner32w1@user.com",
 	"password": "123456",
-    "adress": "Rua das flores, 100, São Paulo, SP",
-    "telefone": "11999999999"
-}
+    "address": "Rua das flores, 100, São Paulo, SP",
+    "phone": "11999999999"
+} 
 
 ### Criacao do evento pelo parceiro
 
