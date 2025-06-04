@@ -1,31 +1,77 @@
+###
+# @name loginPartner2
+
 POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-	"email": "patner32w1@user.com",
+	"email": "patner2@user.com",
+	"password": "123456"
+}
+
+###
+@tokenPartner2 = {{loginPartner2.response.body.token }}
+
+###
+# @name loginPartner1
+
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+	"email": "patner1@user.com",
+	"password": "123456"
+}
+
+###
+@tokenPartner1 = {{loginPartner1.response.body.token }}
+
+###
+# @name loginCustomer1
+
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+	"email": "customer1@user.com",
+	"password": "123456"
+}
+
+###
+@tokenCustomer1 = {{loginCustomer1.response.body.token }}
+
+###
+
+POST http://localhost:3000/partners/register
+Content-Type: application/json
+
+{
+	"name": "Empresario",
+    "company_name": "Company Show CC",
+	"email": "patner1@user.com",
 	"password": "123456"
 }
 
 ###
 
-POST http://localhost:3000/partners
+POST http://localhost:3000/partners/register
 Content-Type: application/json
 
 {
-	"name": "Partner 13",
-    "company_name": "Company 1",
-	"email": "patner212@user.com",
+	"name": "Empresario",
+    "company_name": "Company 23",
+	"email": "patner2@user.com",
 	"password": "123456"
 }
 
 ###
 
-POST http://localhost:3000/customers
+POST http://localhost:3000/customers/register
 Content-Type: application/json
 
 {
-	"name": "Partner 1",
-	"email": "patner32w1@user.com",
+	"name": "Joao Silva Rocha",
+	"email": "customer1@user.com",
 	"password": "123456",
     "address": "Rua das flores, 100, São Paulo, SP",
     "phone": "11999999999"
@@ -35,11 +81,12 @@ Content-Type: application/json
 
 POST http://localhost:3000/partners/events
 Content-Type: application/json
+Authorization: Bearer {{tokenPartner1}}
 
 {
 	"name": "Partner 1",
     "description": "Show do luiz",
-    "date": "2026-01-01:T00:00:00",
+    "date": "2026-01-01T00:00:00", 
     "location": "Rua das flores, 100, São Paulo, SP"
 }
 
@@ -51,6 +98,10 @@ GET http://localhost:3000/events/2
 
 ### Listagem dos eventos pelo parceiro
 GET http://localhost:3000/partners/events
+Content-Type: application/json
+Authorization: Bearer {{tokenPartner1}}
 
 ### Listagem do evento pelo parceiro
 GET http://localhost:3000/partners/events/2
+Content-Type: application/json
+Authorization: Bearer {{tokenPartner2}}
