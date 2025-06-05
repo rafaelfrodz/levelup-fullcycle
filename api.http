@@ -84,8 +84,8 @@ Content-Type: application/json
 Authorization: Bearer {{tokenPartner1}}
 
 {
-	"name": "Partner 1",
-    "description": "Show do luiz",
+	"name": "Partner 12111",
+    "description": "Showwww do luiz",
     "date": "2026-01-01T00:00:00", 
     "location": "Rua das flores, 100, São Paulo, SP"
 }
@@ -94,7 +94,7 @@ Authorization: Bearer {{tokenPartner1}}
 GET http://localhost:3000/events
 
 ### Listagem do evento
-GET http://localhost:3000/events/2
+GET http://localhost:3000/events/0
 
 ### Listagem dos eventos pelo parceiro
 GET http://localhost:3000/partners/events
@@ -104,4 +104,4 @@ Authorization: Bearer {{tokenPartner1}}
 ### Listagem do evento pelo parceiro
 GET http://localhost:3000/partners/events/2
 Content-Type: application/json
-Authorization: Bearer {{tokenPartner2}}
+Authorization: Bearer {{tokenPartner1}}

@@ -42,7 +42,6 @@ app.use(async (req, res, next) => {
   try {
     const connection = await createConnection();
     const payload = jwt.verify(token, "123456") as {id: number, email: string};
-    console.log(payload.id);
     const [rows] = await connection.execute<mysql.RowDataPacket[]>(
       "SELECT * FROM users WHERE id = ?", 
       [payload.id]
@@ -88,9 +87,6 @@ app.post("/auth/login", async (req, res, next) => {
   }finally {
     await connection.end();
   }
-
-  console.log(email, password);
-  res.send()
 });
 
 app.post("/partners/register", async (req, res) => {
@@ -152,15 +148,41 @@ app.post("/customers/register", async (req, res) => {
 });
 
 app.get("/events", async (req, res) => {
+  const connection = await createConnection();
+  try {
+    const [eventsRows] = await connection.execute<mysql.RowDataPacket[]>(
+      "SELECT * FROM events", 
+    );
+    
+    res.status(200).json(eventsRows);
 
+  } finally {
+    await connection.end();
+  }
 
 
 });
 
-app.get("/events/:eventId", (req, res) => {
+app.get("/events/:eventId", async (req, res) => {
   const {eventId} = req.params;
-  console.log(eventId);
-  res.send()
+  const connection = await createConnection();
+  try {
+    const [eventsRows] = await connection.execute<mysql.RowDataPacket[]>(
+      "SELECT id, name, description, date, location, created_at FROM events WHERE id = ?", 
+      [eventId]
+    );
+    const event = eventsRows.length? eventsRows[0]: null;
+    
+    if (!event) {
+      res.status(404).json({message: "Event not found"});
+      return;
+    }
+    
+    res.status(200).json(event);
+
+  } finally {
+    await connection.end();
+  }
 });
 
 app.post("/partners/events", async (req, res) => {
