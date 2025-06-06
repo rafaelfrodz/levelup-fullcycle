@@ -94,7 +94,7 @@ Authorization: Bearer {{tokenPartner1}}
 GET http://localhost:3000/events
 
 ### Listagem do evento
-GET http://localhost:3000/events/0
+GET http://localhost:3000/events/2
 
 ### Listagem dos eventos pelo parceiro
 GET http://localhost:3000/partners/events
