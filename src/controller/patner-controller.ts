@@ -1,6 +1,4 @@
 import { Router } from "express";
-import { createConnection } from "../database";
-import * as mysql from "mysql2/promise";
 import { PartnerService } from "../services/patner-service";
 import { EventService } from "../services/event-service";
 
@@ -24,13 +22,9 @@ partnerRoutes.post("/events", async (req, res) => {
     const {name, description, date, location} = req.body;
     const patnerId = req.user!.id;
     const eventService = new EventService();
-    const connection = await createConnection();
-    const [rows] = await connection.execute<mysql.RowDataPacket[]>(
-      "SELECT * FROM partners WHERE user_id = ?", 
-      [patnerId]
-    );
-    const partner = rows.length ? rows[0]: null;
-    if (!partner) {
+    const partnerService = new PartnerService();
+    const partnerResult = await partnerService.findByUserId(patnerId);
+    if (!partnerResult) {
       res.status(403).json({message: "Not authorized"});
       return;
     }
@@ -39,7 +33,7 @@ partnerRoutes.post("/events", async (req, res) => {
       description,
       date,
       location,
-      patnerId: partner.id
+      patnerId: partnerResult.id
     });
     res.status(201).json(eventResult);
 
@@ -47,51 +41,33 @@ partnerRoutes.post("/events", async (req, res) => {
   
   partnerRoutes.get("/events", async (req, res) => {
     const partnerId = req.user!.id;
-    const connection = await createConnection();
-    try {
-      const [rows] = await connection.execute<mysql.RowDataPacket[]>(
-        "SELECT * FROM partners WHERE user_id = ?", 
-        [partnerId]
-      );
-      const partner = rows.length ? rows[0]: null;
-      if (!partner) {
-        res.status(403).json({message: "Not authorized"});
-        return;
-      }
-      const eventService = new EventService();
-      const eventsResult = await eventService.findAll(partner.id);
-      res.status(200).json(eventsResult);
-
-    } finally {
-      await connection.end();
+    const partnerService = new PartnerService();
+    const patnerResult = await partnerService.findByUserId(partnerId);
+    if (!patnerResult) {
+      res.status(403).json({message: "Not authorized"});
+      return;
     }
+    const eventService = new EventService();
+    const eventsResult = await eventService.findAll(patnerResult.id);
+    res.status(200).json(eventsResult);
   });
   
   partnerRoutes.get("/events/:eventId", async (req, res) => {
     const {eventId} = req.params;
     const partnerId = req.user!.id;
-    const connection = await createConnection();
-    try {
-      const [rows] = await connection.execute<mysql.RowDataPacket[]>(
-        "SELECT * FROM partners WHERE user_id = ?", 
-        [partnerId]
-      );
-      const partner = rows.length ? rows[0]: null;
-      if (!partner) {
-        res.status(403).json({message: "Not authorized"});
-        return;
-      }
-  
-      const eventService = new EventService();
-      const eventResult = await eventService.findById(+eventId);
-      
-      if (!eventResult || eventResult.partners_id !== partner.id) {
-        res.status(404).json({message: "Event not found"});
-        return;
-      }
-      res.status(200).json(eventResult);
-  
-    } finally {
-      await connection.end();
+    const partnerService = new PartnerService();
+    const partnerResult = await partnerService.findByUserId(partnerId);
+    if (!partnerResult) {
+      res.status(403).json({message: "Not authorized"});
+      return;
     }
+  
+    const eventService = new EventService();
+    const eventResult = await eventService.findById(+eventId);
+      
+    if (!eventResult || eventResult.partners_id !== partnerResult.id) {
+      res.status(404).json({message: "Event not found"});
+      return;
+    }
+    res.status(200).json(eventResult);
   });
