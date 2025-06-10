@@ -1,11 +1,11 @@
 import express from "express";
-import { createConnection } from "./database";
+import { Database } from "./database";
 import * as jwt from "jsonwebtoken";
-import * as mysql from "mysql2/promise";
 import { authRoutes } from "./controller/auth-controller";
 import { partnerRoutes } from "./controller/patner-controller";
 import { customerRoutes } from "./controller/customer-controller";
 import { eventRoutes } from "./controller/event-controller";
+import { UserService } from "./services/user-service";
 
 
 
@@ -36,18 +36,14 @@ app.use(async (req, res, next) => {
     return;
   }
   try {
-    const connection = await createConnection()
     const payload = jwt.verify(token, "123456") as {id: number, email: string};
-    const [rows] = await connection.execute<mysql.RowDataPacket[]>(
-      "SELECT * FROM users WHERE id = ?", 
-      [payload.id]
-    );
-    const user = rows.length ? rows[0]: null;
-    if (!user) {
+    const userService = new UserService();
+    const userResult = await userService.findById(payload.id);
+    if (!userResult) {
       res.status(401).json({message: "Failed to authenticate token"});
       return;
     }
-    req.user = user as {id: number, email: string};
+    req.user = userResult as {id: number, email: string};
     next(
       
     )
@@ -72,7 +68,7 @@ app.use('/events', eventRoutes)
 
 
 app.listen(3000, async () => {
-  const connection = await createConnection();
+  const connection = Database.getInstance();
   await connection.execute("SET FOREIGN_KEY_CHECKS = 0");
   await connection.execute("TRUNCATE TABLE users");
   await connection.execute("TRUNCATE TABLE customers");

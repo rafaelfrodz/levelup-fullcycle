@@ -1,6 +1,7 @@
-import { createConnection } from "../database";
+import { Database } from "../database";
 import * as mysql from "mysql2/promise";
 import bcryot from "bcrypt";
+import { UserModel } from "../models/user-models";
 
 export class CustomerService {
     async register(data: {
@@ -11,17 +12,16 @@ export class CustomerService {
         address: string 
     }){
         const {name, email, password, phone, address} = data;
-        const connection = await createConnection();
+        const connection = Database.getInstance();
         try {
             const createdAt = new Date();
             const hashedPassword = bcryot.hashSync(password, 10);
-            const [userResult] = await connection.execute<mysql.ResultSetHeader>('INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, ?)', [
+            const userModel = await UserModel.create({
               name, 
               email, 
-              hashedPassword, 
-              createdAt
-            ]);
-            const userId = userResult.insertId;
+              password: hashedPassword
+            });
+            const userId = userModel.id;
             const [customersResults] = await connection.execute<mysql.ResultSetHeader>('INSERT INTO customers (user_id, address, phone, created_at) VALUES (?, ?, ?, ?)',[
               userId, 
               address,

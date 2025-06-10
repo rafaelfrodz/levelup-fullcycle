@@ -1,4 +1,4 @@
-import { createConnection } from "../database";
+import { Database } from "../database";
 import * as mysql from "mysql2/promise";
 
 export class EventService {
@@ -10,7 +10,7 @@ export class EventService {
         patnerId: number;
     }) {
         const {name, description, date, location, patnerId} = data
-        const connection = await createConnection();
+        const connection = Database.getInstance();
         try {
           const eventDate = new Date(date);
           const createdAt = new Date();
@@ -30,7 +30,7 @@ export class EventService {
     }
 
     async findAll(partnerId?: number) {
-        const connection = await createConnection();
+        const connection = Database.getInstance();
         try {
            const query = partnerId 
                ? "SELECT * FROM events WHERE partners_id =?" 
@@ -47,7 +47,7 @@ export class EventService {
     }
 
     async findById(eventId: number) {
-        const connection = await createConnection();
+        const connection = Database.getInstance();
         try {  
           const [eventsRows] = await connection.execute<mysql.RowDataPacket[]>(
             "SELECT * FROM events WHERE id =?",

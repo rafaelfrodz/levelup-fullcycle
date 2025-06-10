@@ -1,6 +1,6 @@
-import { createConnection } from "../database";
 import * as mysql from "mysql2/promise";
 import bcryot from "bcrypt";
+import { Database } from "../database";
 
 
 export class PartnerService {
@@ -11,7 +11,7 @@ export class PartnerService {
         company_name: string
     }) {
         const {name, email, password, company_name} = data
-        const connection = await createConnection();
+        const connection = Database.getInstance();
         try {
             const createdAt = new Date();
             const hashedPassword = bcryot.hashSync(password, 10);
@@ -35,7 +35,7 @@ export class PartnerService {
     }
 
     async findByUserId(userId: number) {
-        const connection = await createConnection();
+        const connection = Database.getInstance();
         try {
           const [rows] = await connection.execute<mysql.RowDataPacket[]>(
             "SELECT * FROM partners WHERE user_id = ?",
