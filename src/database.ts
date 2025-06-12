@@ -11,7 +11,7 @@ export class Database {
         host: "localhost",
         user: "root",
         password: "root",
-        database: "tickers",
+        database: "tickets",
         port: 33060,
         waitForConnections: true,
         connectionLimit: 10,

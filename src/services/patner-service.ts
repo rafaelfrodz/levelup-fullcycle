@@ -1,6 +1,6 @@
-import * as mysql from "mysql2/promise";
-import bcryot from "bcrypt";
 import { Database } from "../database";
+import { UserModel } from "../models/user-model";
+import { PartnerModel } from "../models/partner-model";
 
 export class PartnerService {
   async register(data: {
@@ -13,24 +13,22 @@ export class PartnerService {
     const connection = Database.getInstance();
     try {
       await connection.beginTransaction();
-      const createdAt = new Date();
-      const hashedPassword = bcryot.hashSync(password, 10);
-      const [userResult] = await connection.execute<mysql.ResultSetHeader>(
-        "INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, ?)",
-        [name, email, hashedPassword, createdAt]
-      );
-      const userId = userResult.insertId;
-      const [partnerResults] = await connection.execute<mysql.ResultSetHeader>(
-        "INSERT INTO partners (user_id, company_name, created_at) VALUES (?, ?, ?)",
-        [userId, company_name, createdAt]
-      );
+      const userResult = await UserModel.create({
+        name,
+        email,
+        password,
+      });
+      const partnerResults = await PartnerModel.create({
+        user_id: userResult.id,
+        company_name,
+      });
       await connection.commit();
       return {
-        id: partnerResults.insertId,
+        id: partnerResults.id,
         name,
-        user_id: userId,
+        user_id: userResult.id,
         company_name,
-        created_at: createdAt,
+        created_at: userResult.created_at,
       };
     } catch (error) {
       await connection.rollback();
@@ -39,11 +37,6 @@ export class PartnerService {
   }
 
   async findByUserId(userId: number) {
-    const connection = Database.getInstance();
-    const [rows] = await connection.execute<mysql.RowDataPacket[]>(
-      "SELECT * FROM partners WHERE user_id = ?",
-      [userId]
-    );
-    return rows.length ? rows[0] : null;
+    return PartnerModel.findByUserId(userId);
   }
 }
