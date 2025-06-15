@@ -90,6 +90,16 @@ Authorization: Bearer {{tokenPartner1}}
     "location": "Rua das flores, 100, São Paulo, SP"
 }
 
+### Criacao de tickets
+POST http://localhost:3000/events/1/tickets
+Content-Type: application/json
+Authorization: Bearer {{tokenPartner1}}
+
+{
+	"num_tickets": 30,
+	"price": 190.00
+}
+
 ### Listagem dos eventos
 GET http://localhost:3000/events
 
