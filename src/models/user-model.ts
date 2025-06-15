@@ -1,6 +1,6 @@
-import { Database } from "../database";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import bcryot from "bcrypt";
+import bcrypt from "bcrypt";
+import { Database } from "../database";
 
 export class UserModel {
   id: number;
@@ -9,7 +9,7 @@ export class UserModel {
   password: string;
   created_at: Date;
 
-  constructor(data: Partial<UserModel>) {
+  constructor(data: Partial<UserModel> = {}) {
     this.fill(data);
   }
 
@@ -21,56 +21,56 @@ export class UserModel {
     },
     options?: { connection?: PoolConnection }
   ): Promise<UserModel> {
-    const db =
-      options?.connection ?? (await Database.getInstance().getConnection());
-    const createdAt = new Date();
+    const db = options?.connection ?? Database.getInstance();
+    const created_at = new Date();
     const hashedPassword = UserModel.hashPassword(data.password);
-    const [userResult] = await db.execute<ResultSetHeader>(
+    const [result] = await db.execute<ResultSetHeader>(
       "INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, ?)",
-      [data.name, data.email, hashedPassword, createdAt]
+      [data.name, data.email, hashedPassword, created_at]
     );
-    return new UserModel({
+    const user = new UserModel({
       ...data,
       password: hashedPassword,
-      id: userResult.insertId,
-      created_at: createdAt,
+      created_at,
+      id: result.insertId,
     });
+    return user;
   }
 
   static hashPassword(password: string): string {
-    return bcryot.hashSync(password, 10);
+    return bcrypt.hashSync(password, 10);
   }
 
   static comparePassword(password: string, hash: string): boolean {
-    return bcryot.compareSync(password, hash);
+    return bcrypt.compareSync(password, hash);
   }
 
   static async findById(id: number): Promise<UserModel | null> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [rows] = await db.execute<RowDataPacket[]>(
-      "SELECT * FROM users WHERE id =?",
+      "SELECT * FROM users WHERE id = ?",
       [id]
     );
     return rows.length ? new UserModel(rows[0] as UserModel) : null;
   }
 
   static async findByEmail(email: string): Promise<UserModel | null> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [rows] = await db.execute<RowDataPacket[]>(
-      "SELECT * FROM users WHERE email =?",
+      "SELECT * FROM users WHERE email = ?",
       [email]
     );
     return rows.length ? new UserModel(rows[0] as UserModel) : null;
   }
 
   static async findAll(): Promise<UserModel[]> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [rows] = await db.execute<RowDataPacket[]>("SELECT * FROM users");
     return rows.map((row) => new UserModel(row as UserModel));
   }
 
   async update(): Promise<void> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [result] = await db.execute<ResultSetHeader>(
       "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?",
       [this.name, this.email, this.password, this.id]
@@ -81,9 +81,9 @@ export class UserModel {
   }
 
   async delete(): Promise<void> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [result] = await db.execute<ResultSetHeader>(
-      "DELETE FROM users WHERE id =?",
+      "DELETE FROM users WHERE id = ?",
       [this.id]
     );
     if (result.affectedRows === 0) {
@@ -91,7 +91,7 @@ export class UserModel {
     }
   }
 
-  fill(data: Partial<UserModel>) {
+  fill(data: Partial<UserModel>): void {
     if (data.id !== undefined) this.id = data.id;
     if (data.name !== undefined) this.name = data.name;
     if (data.email !== undefined) this.email = data.email;

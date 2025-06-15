@@ -1,5 +1,5 @@
-import { Database } from "../database";
 import { PoolConnection, ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { Database } from "../database";
 import { UserModel } from "./user-model";
 
 export class PartnerModel {
@@ -14,13 +14,10 @@ export class PartnerModel {
   }
 
   static async create(
-    data: {
-      user_id: number;
-      company_name: string;
-    },
+    data: { user_id: number; company_name: string },
     options?: { connection?: PoolConnection }
   ): Promise<PartnerModel> {
-    const db = await Database.getInstance().getConnection();
+    const db = options?.connection ?? Database.getInstance();
     const created_at = new Date();
     const [result] = await db.execute<ResultSetHeader>(
       "INSERT INTO partners (user_id, company_name, created_at) VALUES (?, ?, ?)",
@@ -38,62 +35,64 @@ export class PartnerModel {
     id: number,
     options?: { user?: boolean }
   ): Promise<PartnerModel | null> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     let query = "SELECT * FROM partners WHERE id = ?";
     if (options?.user) {
       query =
-        "SELECT p.*, users.id as user_id, users.name as user_name, users.email as user_email FROM partners p LEFT JOIN users ON p.user_id = users.id WHERE p.id =?";
+        "SELECT p.*, users.id as user_id, users.name as user_name, users.email as user_email FROM partners p JOIN users ON p.user_id = users.id WHERE p.id = ?";
     }
     const [rows] = await db.execute<RowDataPacket[]>(query, [id]);
-    if (rows.length === 0) {
-      return null;
-    }
-    const patner = new PartnerModel(rows[0] as PartnerModel);
+
+    if (rows.length === 0) return null;
+
+    const partner = new PartnerModel(rows[0] as PartnerModel);
 
     if (options?.user) {
-      patner.user = new UserModel({
+      partner.user = new UserModel({
         id: rows[0].user_id,
         name: rows[0].user_name,
         email: rows[0].user_email,
       });
     }
 
-    return patner;
+    return partner;
   }
 
   static async findByUserId(
     userId: number,
     options?: { user?: boolean }
   ): Promise<PartnerModel | null> {
-    const db = await Database.getInstance().getConnection();
-    let query = "SELECT * FROM partners WHERE user_id =?";
+    const db = Database.getInstance();
+    let query = "SELECT * FROM partners WHERE user_id = ?";
     if (options?.user) {
       query =
-        "SELECT p.*, users.id as user_id, users.name as user_name, users.email as user_email FROM partners p LEFT JOIN users ON p.user_id = users.id WHERE p.user_id =?";
+        "SELECT p.*, users.id as user_id, users.name as user_name, users.email as user_email FROM partners p JOIN users ON p.user_id = users.id WHERE p.user_id = ?";
     }
     const [rows] = await db.execute<RowDataPacket[]>(query, [userId]);
-    if (rows.length === 0) {
-      return null;
-    }
-    const patner = new PartnerModel(rows[0] as PartnerModel);
+
+    if (rows.length === 0) return null;
+
+    const partner = new PartnerModel(rows[0] as PartnerModel);
+
     if (options?.user) {
-      patner.user = new UserModel({
+      partner.user = new UserModel({
         id: rows[0].user_id,
         name: rows[0].user_name,
         email: rows[0].user_email,
       });
     }
-    return patner;
+
+    return partner;
   }
 
   static async findAll(): Promise<PartnerModel[]> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [rows] = await db.execute<RowDataPacket[]>("SELECT * FROM partners");
     return rows.map((row) => new PartnerModel(row as PartnerModel));
   }
 
   async update(): Promise<void> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [result] = await db.execute<ResultSetHeader>(
       "UPDATE partners SET user_id = ?, company_name = ? WHERE id = ?",
       [this.user_id, this.company_name, this.id]
@@ -104,7 +103,7 @@ export class PartnerModel {
   }
 
   async delete(): Promise<void> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [result] = await db.execute<ResultSetHeader>(
       "DELETE FROM partners WHERE id = ?",
       [this.id]

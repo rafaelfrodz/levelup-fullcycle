@@ -18,8 +18,7 @@ export class CustomerModel {
     data: { user_id: number; address: string; phone: string },
     options?: { connection?: PoolConnection }
   ): Promise<CustomerModel> {
-    const db =
-      options?.connection ?? (await Database.getInstance().getConnection());
+    const db = options?.connection ?? Database.getInstance();
     const created_at = new Date();
     const [result] = await db.execute<ResultSetHeader>(
       "INSERT INTO customers (user_id, address, phone, created_at) VALUES (?, ?, ?, ?)",
@@ -37,7 +36,7 @@ export class CustomerModel {
     id: number,
     options?: { user?: boolean }
   ): Promise<CustomerModel | null> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     let query = "SELECT * FROM customers WHERE id = ?";
     if (options?.user) {
       query =
@@ -64,7 +63,7 @@ export class CustomerModel {
     user_id: number,
     options?: { user?: boolean }
   ): Promise<CustomerModel | null> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     let query = "SELECT * FROM customers WHERE user_id = ?";
     if (options?.user) {
       query =
@@ -88,13 +87,13 @@ export class CustomerModel {
   }
 
   static async findAll(): Promise<CustomerModel[]> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [rows] = await db.execute<RowDataPacket[]>("SELECT * FROM customers");
     return rows.map((row) => new CustomerModel(row as CustomerModel));
   }
 
   async update(): Promise<void> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [result] = await db.execute<ResultSetHeader>(
       "UPDATE customers SET user_id = ?, address = ?, phone = ? WHERE id = ?",
       [this.user_id, this.address, this.phone, this.id]
@@ -105,7 +104,7 @@ export class CustomerModel {
   }
 
   async delete(): Promise<void> {
-    const db = await Database.getInstance().getConnection();
+    const db = Database.getInstance();
     const [result] = await db.execute<ResultSetHeader>(
       "DELETE FROM customers WHERE id = ?",
       [this.id]
