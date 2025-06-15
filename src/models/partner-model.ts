@@ -20,7 +20,7 @@ export class PartnerModel {
     },
     options?: { connection?: PoolConnection }
   ): Promise<PartnerModel> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const created_at = new Date();
     const [result] = await db.execute<ResultSetHeader>(
       "INSERT INTO partners (user_id, company_name, created_at) VALUES (?, ?, ?)",
@@ -38,7 +38,7 @@ export class PartnerModel {
     id: number,
     options?: { user?: boolean }
   ): Promise<PartnerModel | null> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     let query = "SELECT * FROM partners WHERE id = ?";
     if (options?.user) {
       query =
@@ -65,7 +65,7 @@ export class PartnerModel {
     userId: number,
     options?: { user?: boolean }
   ): Promise<PartnerModel | null> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     let query = "SELECT * FROM partners WHERE user_id =?";
     if (options?.user) {
       query =
@@ -87,13 +87,13 @@ export class PartnerModel {
   }
 
   static async findAll(): Promise<PartnerModel[]> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [rows] = await db.execute<RowDataPacket[]>("SELECT * FROM partners");
     return rows.map((row) => new PartnerModel(row as PartnerModel));
   }
 
   async update(): Promise<void> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [result] = await db.execute<ResultSetHeader>(
       "UPDATE partners SET user_id = ?, company_name = ? WHERE id = ?",
       [this.user_id, this.company_name, this.id]
@@ -104,7 +104,7 @@ export class PartnerModel {
   }
 
   async delete(): Promise<void> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [result] = await db.execute<ResultSetHeader>(
       "DELETE FROM partners WHERE id = ?",
       [this.id]

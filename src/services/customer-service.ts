@@ -11,19 +11,25 @@ export class CustomerService {
     address: string;
   }) {
     const { name, email, password, phone, address } = data;
-    const connection = Database.getInstance();
+    const connection = await Database.getInstance().getConnection();
     try {
       await connection.beginTransaction();
-      const user = await UserModel.create({
-        name,
-        email,
-        password: password,
-      });
-      const customer = await CustomerModel.create({
-        user_id: user.id,
-        address,
-        phone,
-      });
+      const user = await UserModel.create(
+        {
+          name,
+          email,
+          password: password,
+        },
+        { connection }
+      );
+      const customer = await CustomerModel.create(
+        {
+          user_id: user.id,
+          address,
+          phone,
+        },
+        { connection }
+      );
       await connection.commit();
       return {
         id: customer.id,

@@ -10,18 +10,24 @@ export class PartnerService {
     company_name: string;
   }) {
     const { name, email, password, company_name } = data;
-    const connection = Database.getInstance();
+    const connection = await Database.getInstance().getConnection();
     try {
       await connection.beginTransaction();
-      const userResult = await UserModel.create({
-        name,
-        email,
-        password,
-      });
-      const partnerResults = await PartnerModel.create({
-        user_id: userResult.id,
-        company_name,
-      });
+      const userResult = await UserModel.create(
+        {
+          name,
+          email,
+          password,
+        },
+        { connection }
+      );
+      const partnerResults = await PartnerModel.create(
+        {
+          user_id: userResult.id,
+          company_name,
+        },
+        { connection }
+      );
       await connection.commit();
       return {
         id: partnerResults.id,

@@ -21,7 +21,8 @@ export class UserModel {
     },
     options?: { connection?: PoolConnection }
   ): Promise<UserModel> {
-    const db = options?.connection ?? Database.getInstance();
+    const db =
+      options?.connection ?? (await Database.getInstance().getConnection());
     const createdAt = new Date();
     const hashedPassword = UserModel.hashPassword(data.password);
     const [userResult] = await db.execute<ResultSetHeader>(
@@ -45,7 +46,7 @@ export class UserModel {
   }
 
   static async findById(id: number): Promise<UserModel | null> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [rows] = await db.execute<RowDataPacket[]>(
       "SELECT * FROM users WHERE id =?",
       [id]
@@ -54,7 +55,7 @@ export class UserModel {
   }
 
   static async findByEmail(email: string): Promise<UserModel | null> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [rows] = await db.execute<RowDataPacket[]>(
       "SELECT * FROM users WHERE email =?",
       [email]
@@ -63,13 +64,13 @@ export class UserModel {
   }
 
   static async findAll(): Promise<UserModel[]> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [rows] = await db.execute<RowDataPacket[]>("SELECT * FROM users");
     return rows.map((row) => new UserModel(row as UserModel));
   }
 
   async update(): Promise<void> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [result] = await db.execute<ResultSetHeader>(
       "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?",
       [this.name, this.email, this.password, this.id]
@@ -80,7 +81,7 @@ export class UserModel {
   }
 
   async delete(): Promise<void> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const [result] = await db.execute<ResultSetHeader>(
       "DELETE FROM users WHERE id =?",
       [this.id]

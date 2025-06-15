@@ -21,7 +21,7 @@ export class EventModel {
     location: string;
     partner_id: number;
   }): Promise<EventModel> {
-    const db = Database.getInstance();
+    const db = await Database.getInstance().getConnection();
     const created_at = new Date();
     const [result] = await db.execute<ResultSetHeader>(
       "INSERT INTO events (name, description, date, location, created_at, partner_id) VALUES (?, ?, ?, ?, ?, ?)",
